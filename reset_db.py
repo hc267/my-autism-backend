@@ -1,12 +1,17 @@
 from database import engine, Base
-import models # 把咱们刚刚画好的新图纸拿过来
+import models 
+from sqlalchemy import text
 
-print("🚨 施工队已进入金库，正在拆除旧柜子...")
-# 这行代码会把数据库里现有的表全部清空（开发初期必备，上线后千万别乱用哦！）
-Base.metadata.drop_all(bind=engine)
+print("🚨 施工队遇到顽固钢筋，正在申请使用 C4 炸药 (CASCADE 级联爆破)...")
 
-print("🏗️ 正在根据最新的 models.py 重新打造带新字段的柜子...")
-# 这行代码会严格按照你写的新字段，重新建表
+# 1. 终极爆破：不一个一个拆表了，直接把整个数据库的 public 空间炸掉并重建
+with engine.begin() as conn:
+    conn.execute(text("DROP SCHEMA public CASCADE;"))
+    conn.execute(text("CREATE SCHEMA public;"))
+
+print("🏗️ 爆破完毕！正在根据最新的 models.py 重新打造柜子...")
+
+# 2. 重新按照图纸建表
 Base.metadata.create_all(bind=engine)
 
 print("✅ 恭喜！金库翻新成功！所有新字段已生效！")
