@@ -151,13 +151,13 @@ def get_training_units(db: DBSession = Depends(get_db)):
 # 🌟 升级：创建儿童档案
 @app.post("/api/children", tags=["儿童管理"])
 def create_child_profile(child_data: ChildCreate, db: DBSession = Depends(get_db)):
+    # 👇 关键修改点就在这里，移除了 notes 参数，防止数据库报错
     new_child = models.Child(
         name=child_data.name, 
         birth_date=child_data.birth_date,
         avatar_url=child_data.avatar_url,
         real_name=child_data.real_name,
-        gender=child_data.gender,
-        notes=child_data.notes
+        gender=child_data.gender
     )
     db.add(new_child); db.commit(); db.refresh(new_child)
     
