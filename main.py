@@ -112,7 +112,10 @@ class SessionUploadNew(BaseModel):
 def register_user(user: UserCreate, db: DBSession = Depends(get_db)):
     if db.query(models.User).filter(models.User.email == user.email).first():
         raise HTTPException(status_code=400, detail="邮箱已被注册")
-    hashed_pwd = pwd_context.hash(user.password)
+        
+    # 🔥 【修改点1】：强制截断注册密码前 72 个字符，彻底解决 bcrypt 报错
+    hashed_pwd = pwd_context.hash(user.password[:72])
+    
     new_user = models.User(email=user.email, hashed_password=hashed_pwd, role=user.role)
     db.add(new_user); db.commit(); db.refresh(new_user)
     return {"status": "success", "user_id": new_user.id}
@@ -120,8 +123,11 @@ def register_user(user: UserCreate, db: DBSession = Depends(get_db)):
 @app.post("/api/login")
 def login_user(user: UserLogin, db: DBSession = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
-    if not db_user or not pwd_context.verify(user.password, db_user.hashed_password):
+    
+    # 🔥 【修改点2】：验证登录密码时，同样强制截断前 72 个字符进行比对
+    if not db_user or not pwd_context.verify(user.password[:72], db_user.hashed_password):
         raise HTTPException(status_code=400, detail="邮箱或密码错误")
+        
     access_token = create_access_token(data={"sub": str(db_user.id), "role": db_user.role})
     return {"status": "success", "user_id": db_user.id, "role": db_user.role, "access_token": access_token, "token_type": "bearer"}
 
