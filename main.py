@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from passlib.context import CryptContext
 import jwt
 from datetime import datetime, timedelta, timezone, date
+from sqlalchemy import text  # 🔥 新增：为了使用 C4 炸药引入的模块
 
 import models
 import database
@@ -20,6 +21,20 @@ app = FastAPI()
 @app.get("/", tags=["系统检测"])
 def health_check():
     return {"status": "ok", "message": "Render 你好，我的服务器活得很好，请不要杀我！"}
+
+# 👇 终极后门：云端起爆按钮 👇
+@app.get("/api/dev/reset-db", tags=["系统检测"])
+def reset_database_from_cloud():
+    try:
+        with database.engine.begin() as conn:
+            conn.execute(text("DROP SCHEMA public CASCADE;"))
+            conn.execute(text("CREATE SCHEMA public;"))
+        
+        # 重新按照图纸建表
+        models.Base.metadata.create_all(bind=database.engine)
+        return {"status": "success", "message": "💣 轰！云端数据库已彻底重置，所有新字段已生效！"}
+    except Exception as e:
+        return {"status": "error", "message": f"爆破失败: {str(e)}"}
 
 # 2. 配置跨域通行证
 app.add_middleware(
