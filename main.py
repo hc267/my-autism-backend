@@ -36,23 +36,7 @@ def reset_database_from_cloud():
     except Exception as e:
         return {"status": "error", "message": f"爆破失败: {str(e)}"}
 
-# 👇 专门用来初始化关卡数据的后门 👇
-@app.get("/api/dev/init-units", tags=["系统检测"])
-def init_units(db: DBSession = Depends(get_db)):
-    try:
-        # 先清空一下，防止重复添加
-        db.query(models.TrainingUnit).delete()
-        
-        # 创建两个基础关卡
-        unit1 = models.TrainingUnit(id=1, name="入门：基础情绪识别", description="识别7种基础表情", difficulty=1)
-        unit2 = models.TrainingUnit(id=2, name="进阶：情境模拟", description="在场景中理解情绪", difficulty=2)
-        
-        db.add(unit1)
-        db.add(unit2)
-        db.commit()
-        return {"status": "success", "message": "✅ 关卡数据（Unit 1 & 2）已初始化成功！"}
-    except Exception as e:
-        return {"status": "error", "message": f"初始化失败: {str(e)}"}
+
 # 2. 配置跨域通行证
 app.add_middleware(
     CORSMiddleware,
@@ -139,6 +123,24 @@ class SessionUploadNew(BaseModel):
 # ==========================================
 # 接口区 (业务逻辑)
 # ==========================================
+
+# 👇 专门用来初始化关卡数据的后门 👇
+@app.get("/api/dev/init-units", tags=["系统检测"])
+def init_units(db: DBSession = Depends(get_db)):
+    try:
+        # 先清空一下，防止重复添加
+        db.query(models.TrainingUnit).delete()
+        
+        # 创建两个基础关卡
+        unit1 = models.TrainingUnit(id=1, name="入门：基础情绪识别", description="识别7种基础表情", difficulty=1)
+        unit2 = models.TrainingUnit(id=2, name="进阶：情境模拟", description="在场景中理解情绪", difficulty=2)
+        
+        db.add(unit1)
+        db.add(unit2)
+        db.commit()
+        return {"status": "success", "message": "✅ 关卡数据（Unit 1 & 2）已初始化成功！"}
+    except Exception as e:
+        return {"status": "error", "message": f"初始化失败: {str(e)}"}
 
 @app.post("/api/register")
 def register_user(user: UserCreate, db: DBSession = Depends(get_db)):
