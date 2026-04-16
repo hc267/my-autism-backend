@@ -131,9 +131,9 @@ def init_units(db: DBSession = Depends(get_db)):
         # 先清空一下，防止重复添加
         db.query(models.TrainingUnit).delete()
         
-        # 创建两个基础关卡
-        unit1 = models.TrainingUnit(id=1, name="入门：基础情绪识别", description="识别7种基础表情", difficulty=1)
-        unit2 = models.TrainingUnit(id=2, name="进阶：情境模拟", description="在场景中理解情绪", difficulty=2)
+        # 🔥 关键修改：去掉了 description 字段，严格对齐你的 models.py 图纸
+        unit1 = models.TrainingUnit(id=1, name="入门：基础情绪识别", difficulty=1)
+        unit2 = models.TrainingUnit(id=2, name="进阶：情境模拟", difficulty=2)
         
         db.add(unit1)
         db.add(unit2)
