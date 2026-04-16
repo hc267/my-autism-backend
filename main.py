@@ -131,17 +131,17 @@ def init_units(db: DBSession = Depends(get_db)):
         # 先清空一下，防止重复添加
         db.query(models.TrainingUnit).delete()
         
-        # 🔥 关键修改：去掉了 description 字段，严格对齐你的 models.py 图纸
-        unit1 = models.TrainingUnit(id=1, name="入门：基础情绪识别", difficulty=1)
-        unit2 = models.TrainingUnit(id=2, name="进阶：情境模拟", difficulty=2)
+        # 🔥 绝对不乱加字段！只保留最基础的 id 和 name
+        unit1 = models.TrainingUnit(id=1, name="第一关")
+        unit2 = models.TrainingUnit(id=2, name="第二关")
         
         db.add(unit1)
         db.add(unit2)
         db.commit()
-        return {"status": "success", "message": "✅ 关卡数据（Unit 1 & 2）已初始化成功！"}
+        return {"status": "success", "message": "✅ 关卡数据（Unit 1 & 2）已极简初始化成功！"}
     except Exception as e:
         return {"status": "error", "message": f"初始化失败: {str(e)}"}
-
+    
 @app.post("/api/register")
 def register_user(user: UserCreate, db: DBSession = Depends(get_db)):
     if db.query(models.User).filter(models.User.email == user.email).first():
