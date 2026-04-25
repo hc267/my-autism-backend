@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from passlib.context import CryptContext
 import jwt
 from datetime import datetime, timedelta, timezone, date
-from sqlalchemy import text  # 🔥 新增：为了使用 C4 炸药引入的模块
+from sqlalchemy import text  # 🔥 新增：为了使用 C4 炸药引入模块
 
 import models
 import database
@@ -244,6 +244,34 @@ def analyze_session_emotions(report_id: int, db: DBSession = Depends(get_db)):
     else: ai_advice = "准确率偏低，可能是不在状态，建议更换轻松的主题或稍作休息。"
     
     return {"status": "success", "report_id": report_id, "ai_analysis": {"overall_accuracy": accuracy, "professional_advice": ai_advice}}
+
+# 🌟 新增：Mock AI 故事生成接口 (支撑前端 AR 场景)
+@app.get("/api/ai/story", tags=["AI 互动 (Mock)"])
+def get_mock_ai_story(target_emotion: str = "happy"):
+    """
+    开发测试期专用的 Mock 故事接口
+    前端根据本关目标情绪调用，获取一段简短的情境描述
+    """
+    mock_stories = {
+        "happy": "今天在幼儿园，老师奖励了一朵小红花，小朋友感到非常高兴！",
+        "sad": "心爱的玩具不小心掉在地上摔坏了，小朋友觉得很难过。",
+        "angry": "搭好的积木被别人碰倒了，小朋友感到有些生气。",
+        "fearful": "突然听到好大一声雷响，小朋友觉得有点害怕。",
+        "disgusted": "闻到了垃圾桶里散发出的怪味，小朋友觉得很难受。",
+        "surprised": "一推开门，发现大家准备了生日惊喜，小朋友感到好惊讶！",
+        "neutral": "小朋友安静地坐在桌子前，正在认真地画画。"
+    }
+    
+    story_text = mock_stories.get(target_emotion, "遇到了一件意想不到的事情，小朋友展现出了特别的情绪。")
+    
+    return {
+        "status": "success",
+        "data": {
+            "target_emotion": target_emotion,
+            "story_content": story_text,
+            "difficulty": "easy"
+        }
+    }
 
 # 🌟 终极升级：家长看板雷达图数据计算
 @app.get("/api/children/{child_id}/statistics", tags=["与前端对齐的接口"])
