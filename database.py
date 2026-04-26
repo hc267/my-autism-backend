@@ -2,25 +2,31 @@ import os  # 导入系统模块，用来读取云端的环境变量
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# --- 核心修改开始 ---
-# 这里的逻辑是：
-# 1. 优先尝试读取名为 "SQLALCHEMY_DATABASE_URL" 的环境变量（Render 云端会提供这个）
-# 2. 如果找不到（比如在你自己的电脑上运行），就自动使用后面那个 localhost 的默认值
+# --- 1. 获取数据库连接字符串 ---
+# 逻辑：优先读取云端环境变量，本地运行则兜底使用 localhost
 SQLALCHEMY_DATABASE_URL = os.getenv(
     "SQLALCHEMY_DATABASE_URL", 
     "postgresql://admin:password123@localhost:5432/autism_db"
 )
-# --- 核心修改结束 ---
 
-# 创建连接引擎
-# 注意：对于 PostgreSQL，有时在云端需要处理连接协议头，SQLAlchemy 1.4+ 推荐确保是 postgresql:// 开头
+# --- 2. 兼容性处理 ---
+# 修复 Render 或某些云平台提供的 postgres:// 前缀，统一转为 SQLAlchemy 要求的 postgresql://
 if SQLALCHEMY_DATABASE_URL and SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
     SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# --- 3. 创建连接引擎 (重点优化部分) ---
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    # 🌟 核心修复：
+    # pool_pre_ping=True 会在每次执行 SQL 之前先检查连接是否还有效（Ping一下）
+    # 如果连接被 Render 踢掉了，它会自动创建新连接，避免报错 "server closed connection"
+    pool_pre_ping=True,
+    # 每 1800 秒（30分钟）重置连接池，防止连接因长时间闲置被云端强制断开
+    pool_recycle=1800
+)
 
-# 创建会话工厂
+# --- 4. 创建会话工厂 ---
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# 创建所有表的基类
+# --- 5. 创建所有表的基类 ---
 Base = declarative_base()
